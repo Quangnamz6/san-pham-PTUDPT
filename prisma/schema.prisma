@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Video {
+  id        String   @id @default(uuid())
+  title     String
+  filePath  String
+  status    String   @default("UPLOADED") // UPLOADED, PROCESSING, COMPLETED, FAILED
+  createdAt DateTime @default(now())
+
+  jobs Job[]
+
+  @@map("videos")
+}
+
+model Job {
+  id           String   @id @default(uuid())
+  videoId      String
+  taskType     String   // THUMBNAIL, METADATA, TRANSCODE
+  status       String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  progress     Int      @default(0) // 0 - 100
+  resultData   Json?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@map("jobs")
+}
